@@ -1,4 +1,12 @@
 """
+[ZH-LEARNING-NOTE]
+学习注释（中文）：
+- 这个文件属于 nanochat 的关键流程组件之一。
+- 阅读建议：先看输入/输出张量（或数据结构）与主函数调用链，再看优化细节。
+- 如果你是 ML 初学者，优先关注“数据如何进入模型、loss 如何计算、参数如何更新/评估”。
+"""
+
+"""
 Evaluate compression ratio of the tokenizer.
 """
 
