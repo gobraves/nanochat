@@ -85,6 +85,8 @@ The script [runs/runcpu.sh](runs/runcpu.sh) shows a very simple example of runni
 
 I've published a number of guides that might contain helpful information, most recent to least recent:
 
+- [中文学习指南（面向机器学习入门者）](docs/LEARNING_GUIDE_ZH.md)
+
 - [Feb 1 2026: Beating GPT-2 for <<$100: the nanochat journey](https://github.com/karpathy/nanochat/discussions/481)
 - [Jan 7 miniseries v1](https://github.com/karpathy/nanochat/discussions/420) documents the first nanochat miniseries of models.
 - To add new abilities to nanochat, see [Guide: counting r in strawberry (and how to add abilities generally)](https://github.com/karpathy/nanochat/discussions/164).

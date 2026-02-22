@@ -36,6 +36,20 @@ from scripts.base_eval import evaluate_core
 print_banner()
 
 # -----------------------------------------------------------------------------
+# 学习导读（面向只掌握基础机器学习的同学）
+# 这份脚本基本对应「预训练」全流程，可按下面顺序阅读：
+# 1) 参数区（CLI arguments）: 先理解 depth / batch / num_iterations。
+# 2) compute_init: 设备与分布式初始化（单卡也走同一套路）。
+# 3) tokenizer + vocab_size: 模型输入输出空间大小。
+# 4) build_model_meta + init_weights: 先在 meta 设备建“空壳”，再真正初始化权重。
+# 5) 优化器与学习率调度: 决定“怎么学、学多快、学多久”。
+# 6) 训练循环: 前向 -> loss -> 反向 -> 更新参数。
+# 7) evaluate/save/sample: 周期性评估、保存 checkpoint、抽样看效果。
+#
+# 可把这份代码映射到经典监督学习框架：
+#   数据 x,y -> 模型 f(x) -> 损失 L -> 梯度 -> 参数更新
+# 只是这里的数据是 token 序列，目标是“下一个 token”。
+# -----------------------------------------------------------------------------
 # CLI arguments
 parser = argparse.ArgumentParser(description="Pretrain base model")
 # Logging

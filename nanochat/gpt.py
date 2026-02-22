@@ -144,6 +144,9 @@ class Block(nn.Module):
 
 
 class GPT(nn.Module):
+    # 学习提示：把 GPT 当成“堆叠很多层的下一词预测器”。
+    # 输入是一串 token id，输出是每个位置对“下一个 token”的概率分布（logits）。
+    # 训练时通过交叉熵让正确 token 概率变高；推理时按 logits 采样/贪心得到新 token。
     def __init__(self, config, pad_vocab_size_to=64):
         """
         NOTE a major footgun: this __init__ function runs in meta device context (!!)
