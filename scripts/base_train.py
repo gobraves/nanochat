@@ -500,8 +500,11 @@ while True:
         break
 
     # -------------------------------------------------------------------------
-    # single training step
-    # evaluate the gradient
+    # single training step（核心训练闭环）
+    # 1) 前向计算 loss
+    # 2) 反向传播累加梯度
+    # 3) optimizer.step() 更新参数
+    # 注意：这里用 grad_accum_steps 模拟更大的总 batch。
     synchronize()
     t0 = time.time()
     for micro_step in range(grad_accum_steps):

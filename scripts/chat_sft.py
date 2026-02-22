@@ -419,8 +419,9 @@ while True:
         break
 
     # -------------------------------------------------------------------------
-    # single training step
-    # evaluate the gradient
+    # single training step（SFT 与预训练同构）
+    # 只是数据分布从“原始语料”变成“指令/对话样本”，目标仍是 next-token CE。
+    # 训练闭环仍是：forward -> backward -> optimizer.step。
     synchronize()
     t0 = time.time()
     for micro_step in range(grad_accum_steps):

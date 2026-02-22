@@ -26,6 +26,8 @@ https://arxiv.org/abs/1711.05101
 """
 
 @torch.compile(dynamic=False, fullgraph=True)
+# 学习提示：adamw_step_fused 是“单参数张量的一次更新公式”，
+# 本质仍是你熟悉的 AdamW，只是把多个算子融合为一个编译图减少 Python 开销。
 def adamw_step_fused(
     p: Tensor,              # (32768, 768) - parameter tensor
     grad: Tensor,           # (32768, 768) - gradient, same shape as p
@@ -160,6 +162,10 @@ def muon_step_fused(
 class MuonAdamW(torch.optim.Optimizer):
     """
     Combined optimizer: Muon for 2D matrix params, AdamW for others, single GPU version.
+
+    学习提示（建议先理解这个）：
+    - 为什么要“参数分组”：不同类型参数（embedding / 大矩阵 / 标量）统计特性不同。
+    - 为什么“混合优化器”：矩阵参数用 Muon 追求速度与稳定，其他参数用 AdamW 保守更新。
 
     AdamW - Fused AdamW optimizer step.
 
