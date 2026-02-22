@@ -389,6 +389,8 @@ class GPT(nn.Module):
         return optimizer
 
     def forward(self, idx, targets=None, kv_cache=None, loss_reduction='mean'):
+        # idx: (B, T) 的 token id
+        # 若传入 targets，则返回训练 loss；否则返回 logits（推理模式）
         B, T = idx.size()
 
         # Grab the rotary embeddings for the current sequence length (they are of shape (1, seq_len, 1, head_dim/2))
@@ -399,11 +401,14 @@ class GPT(nn.Module):
         T0 = 0 if kv_cache is None else kv_cache.get_pos()
         cos_sin = self.cos[:, T0:T0+T], self.sin[:, T0:T0+T] # truncate cache to current sequence length
 
-        # Forward the trunk of the Transformer
-        x = self.transformer.wte(idx) # embed current token
+        # Forward 主干：token -> embedding -> N 层 Transformer block -> final norm
+        x = self.transformer.wte(idx) # (B, T) -> (B, T, C)
         x = norm(x)
-        x0 = x  # save initial normalized embedding for x0 residual
+        x0 = x  # 保留初始表示，供 x0_lambdas 做跨层“回注”
         for i, block in enumerate(self.transformer.h):
+            # 两个可学习标量控制：
+            # - resid_lambdas[i]：当前残差流强度
+            # - x0_lambdas[i]：初始 embedding 回注强度
             x = self.resid_lambdas[i] * x + self.x0_lambdas[i] * x0
             ve = self.value_embeds[str(i)](idx) if str(i) in self.value_embeds else None
             x = block(x, ve, cos_sin, self.window_sizes[i], kv_cache)
@@ -417,12 +422,13 @@ class GPT(nn.Module):
         logits = softcap * torch.tanh(logits / softcap) # squash the logits
 
         if targets is not None:
-            # training: given the targets, compute and return the loss
-            # TODO experiment with chunked cross-entropy?
+            # 训练分支：
+            # logits: (B,T,V), targets: (B,T) -> 展平后做 token-level 交叉熵
+            # ignore_index=-1 用于跳过 padding/无效监督位置
             loss = F.cross_entropy(logits.view(-1, logits.size(-1)), targets.view(-1), ignore_index=-1, reduction=loss_reduction)
             return loss
         else:
-            # inference: just return the logits directly
+            # 推理分支：返回每个位置的词表 logits
             return logits
 
     @torch.inference_mode()

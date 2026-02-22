@@ -76,6 +76,12 @@ def tokenizing_distributed_data_loader_with_state_bos_bestfit(
     device="cuda", resume_state_dict=None,
     buffer_size=1000
 ):
+    # 学习提示（非常关键）：
+    # 这个 loader 最终要产出两块张量：
+    #   inputs  : (B, T)
+    #   targets : (B, T)
+    # 并满足 targets[b, t] = inputs[b, t+1]（右移一位）
+    # 也就是标准 next-token prediction 监督信号。
     """
     BOS-aligned dataloader with Best-Fit Cropping.
 
@@ -119,6 +125,7 @@ def tokenizing_distributed_data_loader_with_state_bos_bestfit(
     targets = gpu_buffer[B * T:].view(B, T)
 
     while True:
+        # 每次外层循环构造一个 batch（B 行）
         for row_idx in range(B):
             pos = 0
             while pos < row_capacity:
@@ -149,7 +156,10 @@ def tokenizing_distributed_data_loader_with_state_bos_bestfit(
                     row_buffer[row_idx, pos:pos + remaining] = torch.tensor(doc[:remaining], dtype=torch.long)
                     pos += remaining
 
-        # Copy to pinned CPU buffer, then single HtoD transfer
+        # 右移构造监督：
+        # row_buffer[:, :-1] 作为输入
+        # row_buffer[:, 1:]  作为目标（下一个 token）
+        # 这就是语言模型训练最核心的一步。
         cpu_inputs.copy_(row_buffer[:, :-1])
         cpu_targets.copy_(row_buffer[:, 1:])
 
